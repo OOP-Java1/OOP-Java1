@@ -1,0 +1,44 @@
+//scan
+#include<stdio.h> 
+#include<stdlib.h> 
+
+int max = 199;  // Max disk size
+
+void main() { 
+    int direction, rq[199], initial, i, headm = 0, n, min, m, headb;
+
+    printf("\nEnter the No Request\n"); 
+    scanf("%d", &n);
+
+    printf("\nEnter the sequence\n"); 
+    for (i = 0; i < n; i++) 
+        scanf("%d", &rq[i]); 
+
+    printf("\nEnter the initial\n"); 
+    scanf("%d", &initial);
+
+    printf("\nEnter head direction\n1:Left\n2:Right\n"); 
+    scanf("%d", &direction);
+
+    // Finding the max request for left movement
+    m = 0;  // Start with the lowest possible value
+    for (i = 0; i < n; i++) {
+        if (rq[i] <= initial && rq[i] > m)  
+            m = rq[i]; 
+    }
+
+    // Finding the min request for right movement
+    min = max;  // Start with the highest possible value
+    for (i = 0; i < n; i++) {
+        if (rq[i] >= initial && rq[i] < min)  
+            min = rq[i]; 
+    }
+
+    if (direction == 1) {  // Moving Left
+        headb = initial + m;  // Move to 0 and back to max request
+        printf("\nTotal left Head Movement %d\n", headb);
+    } else {  // Moving Right
+        headm = (max - initial) + (max - min);  // Move to 199 and back to min request
+        printf("\nTotal right Head Movement %d\n", headm);
+    }
+}

@@ -1,0 +1,209 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define MAX_BLOCKS 256 // Maximum blocks limit
+
+int bitVector[MAX_BLOCKS]; // 1 = Free, 0 = Allocated
+int n; // Number of blocks
+
+typedef struct File {
+    char name[20];
+    int indexBlock; // Stores index block location
+    int length; // Number of allocated blocks
+    int *blocks; // Stores allocated block locations
+    struct File *next;
+} FileNode;
+
+FileNode *fileList = NULL; // Head of the file list
+
+// Initialize the Disk and Bit Vector
+void initializeDisk() {
+    printf("Enter the number of blocks in the disk (Max %d): ", MAX_BLOCKS);
+    scanf("%d", &n);
+    if (n > MAX_BLOCKS) n = MAX_BLOCKS;
+
+    // Initialize all blocks as free
+    for (int i = 0; i < n; i++) {
+        bitVector[i] = 1; // 1 = Free, 0 = Allocated
+    }
+
+    // Randomly mark some blocks as allocated
+    srand(time(0));
+    int preAllocated = n / 5; // 20% of blocks will be allocated randomly
+    for (int i = 0; i < preAllocated; i++) {
+        int randomBlock = rand() % n;
+        bitVector[randomBlock] = 0; // Mark as allocated
+    }
+}
+
+// Display the Bit Vector
+void showBitVector() {
+    printf("\nBit Vector (1 = Free, 0 = Allocated):\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", bitVector[i]);
+        if ((i + 1) % 20 == 0) printf("\n"); // Print 20 per line for readability
+    }
+    printf("\n");
+}
+
+// Create a new file
+void createFile() {
+    char fname[20];
+    int len, count = 0;
+
+    printf("Enter file name: ");
+    scanf("%s", fname);
+    printf("Enter number of blocks needed: ");
+    scanf("%d", &len);
+
+    if (len + 1 > n) {
+        printf("Error: Not enough blocks available.\n");
+        return;
+    }
+
+    FileNode *newFile = (FileNode *)malloc(sizeof(FileNode));
+    strcpy(newFile->name, fname);
+    newFile->length = len;
+    newFile->blocks = (int *)malloc(len * sizeof(int));
+
+    // Find a free block for the index block
+    int indexBlock = -1;
+    for (int i = 0; i < n; i++) {
+        if (bitVector[i] == 1) {
+            indexBlock = i;
+            bitVector[i] = 0; // Allocate index block
+            break;
+        }
+    }
+    if (indexBlock == -1) {
+        printf("Error: No free block available for index.\n");
+        free(newFile);
+        return;
+    }
+    newFile->indexBlock = indexBlock;
+
+    // Allocate blocks for the file
+    for (int i = 0; i < n && count < len; i++) {
+        if (bitVector[i] == 1) {
+            newFile->blocks[count++] = i;
+            bitVector[i] = 0; // Mark as allocated
+        }
+    }
+
+    if (count < len) {
+        printf("Error: Not enough free blocks available.\n");
+        free(newFile->blocks);
+        free(newFile);
+        return;
+    }
+
+    // Add file to the linked list
+    newFile->next = fileList;
+    fileList = newFile;
+
+    printf("File '%s' created successfully.\n", fname);
+    printf("Index Block: %d\nAllocated Blocks: ", indexBlock);
+    for (int i = 0; i < len; i++) {
+        printf("%d ", newFile->blocks[i]);
+    }
+    printf("\n");
+}
+
+// Show file directory
+void showDirectory() {
+    FileNode *temp = fileList;
+    if (temp == NULL) {
+        printf("\nNo files stored in the system.\n");
+        return;
+    }
+
+    printf("\nFile Directory:\n");
+    printf("File Name\tIndex Block\tAllocated Blocks\n");
+    while (temp != NULL) {
+        printf("%s\t\t%d\t\t", temp->name, temp->indexBlock);
+        for (int i = 0; i < temp->length; i++) {
+            printf("%d ", temp->blocks[i]);
+        }
+        printf("\n");
+        temp = temp->next;
+    }
+}
+
+// Delete a file
+void deleteFile() {
+    char fname[20];
+    printf("Enter the file name to delete: ");
+    scanf("%s", fname);
+
+    FileNode *temp = fileList, *prev = NULL;
+
+    while (temp != NULL) {
+        if (strcmp(temp->name, fname) == 0)
+            break;
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {
+        printf("Error: File not found.\n");
+        return;
+    }
+
+    // Free allocated blocks
+    bitVector[temp->indexBlock] = 1; // Free index block
+    for (int i = 0; i < temp->length; i++) {
+        bitVector[temp->blocks[i]] = 1; // Free data blocks
+    }
+
+    // Remove from linked list
+    if (prev == NULL)
+        fileList = temp->next;
+    else
+        prev->next = temp->next;
+
+    free(temp->blocks);
+    free(temp);
+    printf("File '%s' deleted successfully.\n", fname);
+}
+
+// Main menu-driven function
+int main() {
+    int choice;
+
+    initializeDisk();
+
+    do {
+        printf("\n==== Indexed File Allocation Menu ====\n");
+        printf("1: Show Bit Vector\n");
+        printf("2: Create New File\n");
+        printf("3: Show Directory\n");
+        printf("4: Delete File\n");
+        printf("5: Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                showBitVector();
+                break;
+            case 2:
+                createFile();
+                break;
+            case 3:
+                showDirectory();
+                break;
+            case 4:
+                deleteFile();
+                break;
+            case 5:
+                printf("Exiting program...\n");
+                break;
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}
