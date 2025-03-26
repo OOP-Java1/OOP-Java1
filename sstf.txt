@@ -1,0 +1,49 @@
+//sstf
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() 
+{ 
+    int rq[200], initial, i, headm = 0, n, min, index, d, count = 0; 
+    
+    printf("\nEnter the No. of Requests: "); 
+    scanf("%d", &n); 
+    
+    printf("\nEnter the sequence: "); 
+    for (i = 0; i < n; i++) 
+        scanf("%d", &rq[i]); 
+    
+    printf("\nEnter the initial head position: "); 
+    scanf("%d", &initial); 
+     
+    while (count != n) 
+    { 
+        min = 1000; 
+        index = -1;  // Ensure `index` is properly initialized
+       
+        for (i = 0; i < n; i++) 
+        { 
+            if (rq[i] != -1)  // Ignore already processed requests
+            {
+                d = abs(rq[i] - initial); 
+                if (min > d) 
+                { 
+                    min = d; 
+                    index = i; 
+                }
+            }
+        }  
+
+        if (index == -1)  // Safety check
+            break;
+
+        headm += min; 
+        initial = rq[index]; 
+        rq[index] = -1;  // Mark as processed
+        count++; 
+    } 
+    
+    printf("\nTotal head movement: %d\n", headm); 
+    
+    return 0;
+}

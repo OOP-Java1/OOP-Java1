@@ -1,0 +1,27 @@
+//fcfs
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int rq[199], initial, i, headm = 0, n;
+    
+    printf("\nEnter the Number of Requests: ");
+    scanf("%d", &n);
+    
+    printf("\nEnter the Request Sequence: ");
+    for (i = 0; i < n; i++) {
+        scanf("%d", &rq[i]);
+    }
+    
+    printf("\nEnter the Initial Head Position: ");
+    scanf("%d", &initial);
+    
+    for (i = 0; i < n; i++) {
+        headm += abs(rq[i] - initial);
+        initial = rq[i];
+    }
+    
+    printf("\nTotal Head Movement: %d\n", headm);
+    
+    return 0;
+}
